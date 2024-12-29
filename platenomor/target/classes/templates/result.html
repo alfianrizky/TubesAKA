@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Pencarian Plat Nomor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f6f7ff 0%, #e9f0ff 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            animation: slideIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .result-card:nth-child(1) { animation-delay: 0.1s; }
+        .result-card:nth-child(2) { animation-delay: 0.2s; }
+        .result-card:nth-child(3) { animation-delay: 0.3s; }
+        .result-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .result-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .chart-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.8s ease-out 0.5s forwards;
+            opacity: 0;
+        }
+
+        .chart-container {
+            height: 500px;
+            margin-top: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #1e293b;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .result-comparison {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            color: #4a5568;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Hasil Pencarian Plat Nomor</h1>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-card">
+                <div class="result-label">Plat Nomor</div>
+                <div class="result-value" th:text="${platNomor}">-</div>
+            </div>
+            <div class="result-card">
+                <div class="result-label">Nama Daerah</div>
+                <div class="result-value" th:text="${namaDaerah}">-</div>
+            </div>
+            <div class="result-card">
+                <div class="result-label">Waktu Iteratif</div>
+                <div class="result-value">
+                    <span th:text="${waktuIteratif}">-</span>
+                    <span class="unit">ns</span>
+                </div>
+            </div>
+            <div class="result-card">
+                <div class="result-label">Waktu Rekursif</div>
+                <div class="result-value">
+                    <span th:text="${waktuRekursif}">-</span>
+                    <span class="unit">ns</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-title">Perbandingan Waktu Eksekusi</div>
+            <div class="chart-container">
+                <canvas id="myChart"></canvas>
+            </div>
+            <div class="result-comparison" th:text="${waktuIteratif < waktuRekursif ? 'Metode Iteratif lebih cepat' : 'Metode Rekursif lebih cepat'}">
+                -
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="/" class="back-button">Kembali ke Pencarian</a>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const waktuIteratif = /*[[${waktuIteratif}]]*/ 0;
+        const waktuRekursif = /*[[${waktuRekursif}]]*/ 0;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['0', '1'],
+                    datasets: [
+                        {
+                            label: 'Waktu Iteratif (ns)',
+                            data: [0, waktuIteratif],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointBackgroundColor: '#3b82f6',
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Waktu Rekursif (ns)',
+                            data: [0, waktuRekursif],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointBackgroundColor: '#ef4444',
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Waktu Eksekusi (nanodetik)',
+                                font: {
+                                    size: 14,
+                                    weight: '500'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
